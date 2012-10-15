@@ -78,8 +78,8 @@ if [ $# == 1 ];
 		# current percentage
 		CURRENT="";
 
-		echo "value count percentage";
-		echo "----- ----- ----------";
+		echo -e "value \t count \t    percentage";
+		echo -e "----- \t ----- \t    ----------";
 
 		for (( i=0; i<=255 ; i++ ));
 			do
@@ -101,7 +101,7 @@ if [ $# == 1 ];
 											else TEMP3="";
 				fi
 
-				echo "$TEMP1$i: $TEMP2${REF[$i]} || $TEMP3$CURRENT% ";
+				echo -e "$TEMP1$i: \t $TEMP2${REF[$i]} \t ||  $TEMP3$CURRENT%";
 		done;
 
 		echo -en "\n";
