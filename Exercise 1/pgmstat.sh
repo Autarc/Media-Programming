@@ -78,6 +78,9 @@ if [ $# == 1 ];
 		# current percentage
 		CURRENT="";
 
+		echo "value count percentage";
+		echo "----- ----- ----------";
+
 		for (( i=0; i<=255 ; i++ ));
 			do
 				if [ $i -lt 10 ];		then TEMP1="  ";
