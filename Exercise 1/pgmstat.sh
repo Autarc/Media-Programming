@@ -70,11 +70,8 @@ if [ $# == 1 ];
 		#  wrong calculation > better way using median or arith...
 		P=$((100/$COUNTER));
 
-		# show results - equalize lengths (index, value, percent)
-		TEMP1="";
-		TEMP2="";
-		TEMP3="";
 
+		# show results - equalize lengths (index, value, percent)
 		# current percentage
 		CURRENT="";
 
