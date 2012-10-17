@@ -8,9 +8,7 @@ if [ $# == 1 ];
 
 		FILE=$1;
 
-		echo -ne '\n''Reading:' $FILE '\n\n';
-
-		# parseFile;
+		echo -en '\n''Reading:' $FILE '\n\n';
 
 		TYPE=$(grep -e '^P[1-6]$' $FILE);
 
@@ -46,11 +44,9 @@ if [ $# == 1 ];
 		# setting default values
 		while [ ${#REF[@]} -le 255 ]; do REF+=(0); done; #  less equals
 
-
-		COUNTER=0;	# increment per operation - amount of entries
+		COUNTER=0;	# increment - amount of entries
 		SUM=0;		# total sum
 		MEDIAN=();	# median list
-
 
 		# counting entries on top
 		for DATA in $BODY; 	do
@@ -67,13 +63,7 @@ if [ $# == 1 ];
 		MEDIAN=${MEDIAN[$((${#MEDIAN[@]}/2))]};
 
 
-		#  wrong calculation > better way using median or arith...
-		P=$((100/$COUNTER));
-
-
 		# show results - equalize lengths (index, value, percent)
-		# current percentage
-		CURRENT="";
 
 		echo -e "value \t count \t    percentage";
 		echo -e "----- \t ----- \t    ----------";
@@ -91,21 +81,19 @@ if [ $# == 1 ];
 												else TEMP2="";
 				fi
 
-				CURRENT=$(( ${REF[$i]} * $P ));
+				#  current percentage
+				P=$(( ${REF[$i]} * 100 / $COUNTER ));
 
-				if [ $CURRENT -lt 10 ];		then TEMP3="  ";
-				elif [ $CURRENT -lt 100 ];	then TEMP3=" ";
-											else TEMP3="";
+				if [ $P -lt 10 ];		then TEMP3="  ";
+				elif [ $P -lt 100 ];	then TEMP3=" ";
+										else TEMP3="";
 				fi
 
-				echo -e "$TEMP1$i: \t $TEMP2${REF[$i]} \t ||  $TEMP3$CURRENT%";
+				echo -e "$TEMP1$i: \t $TEMP2${REF[$i]} \t ||  $TEMP3$P%";
 		done;
 
-		echo -en "\n";
-
-		echo "Mittelwert:" $ARITH;
+		echo -en "\n""Mittelwert:" $ARITH "\n";
 		echo "Median:" $MEDIAN;
-
 
 		exit 0;
 
