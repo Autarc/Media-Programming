@@ -1,31 +1,30 @@
 #! /etc/bash
 #
-# Invert a pgm-ascii-file and write the result into a new file.
+# Invert a 'pgm-ascii' file and write the result into a new file.
 
+# minimum input
 if [ $# == 2 ];
 
 	then
 
-		# parameter
 		SOURCE=$1;
 		TARGET=$2;
 
-		if [ -r $TARGET ]; then echo "The target already exists !"; exit 11; fi;
+		if [ -r $TARGET ]; then echo "Target already exists !"; exit 3; fi;
 
-		TYPE=$(grep -e '^P[1-6]$' $SOURCE);
+		TYPE=$(grep '^P[1-6]$' $SOURCE);
 
 		# check for valid file
-		if [ -z $TYPE ]; then echo "Invalid File Input"; exit 13; fi;
+		if [ -z $TYPE ]; then echo 'Wrong File Input !'; exit 2; fi;
 
 
-		echo -en "\n""Reading:" $SOURCE "\n";
+		echo -en "\nReading:" $SOURCE "\n\n";
 
-		echo -en "\n""Start calculating the pixel values...""\n\n";
+		echo -en "Start calculating the pixel values... \n\n";
 
 		# calculate size
 		SIZE=$(grep -e '^[0-9]* [0-9]*$' $SOURCE)
 
-		# missing format ? || 65536
 		RANGE=$(grep -e '^255$' $SOURCE);
 
 		# creating the file
@@ -33,18 +32,16 @@ if [ $# == 2 ];
 
 		# copy header, keep structure
 		echo $TYPE >> $TARGET;
-		grep -e '^#.*$' $SOURCE >> $TARGET;
+		grep '^#.*$' $SOURCE >> $TARGET;
 		echo $SIZE >> $TARGET;
 		echo $RANGE >> $TARGET;
 
-
-		# pure data - line doesnt matter
+		# data body
 		BODY=$(grep -v -e '^P[1-6]$' -e '^#.*$' -e '^[0-9]* [0-9]*$' -e '^255$' $SOURCE);
 
-		# initial entry counter
+		# counting entries on top, keep formating
 		COUNTER=0;
 
-		# counting entries on top
 		for DATA in $BODY; 	do
 
 								if [ $DATA -lt 10 ];	then TEMP="  ";
@@ -61,13 +58,13 @@ if [ $# == 2 ];
 
 							done;
 
-		echo -en "\n\n""Finished - written into \"$TARGET\".\n";
+		echo -en "\n\nFinished - written into \"$TARGET\".\n";
 
 		exit 0;
 
 	else
 
-		echo -en "\n\n""Invalid input. \n";
-		exit 127;
+		echo "Invalid Input !";
+		exit 1;
 fi
 
