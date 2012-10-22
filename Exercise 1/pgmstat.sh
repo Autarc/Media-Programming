@@ -1,105 +1,102 @@
 #! /etc/bash
 #
-# Analyse a pgm-ascii-file and show the "arithemic", the median and the value of the colors.
+# Analyse a 'pgm-ascii' file and show the arithemic mean, the median and the probability of the colors.
 
+# minimum input
 if [ $# == 1 ];
 
 	then
 
 		FILE=$1;
 
-		echo -en '\n''Reading:' $FILE '\n\n';
+		echo -en "\n Reading: $FILE  \n\n";
 
-		TYPE=$(grep -e '^P[1-6]$' $FILE);
+		TYPE=$(grep '^P[1-6]$' $FILE);
 
 		# check for valid file
-		if [ -z $TYPE ]; then echo 'Invalid File Input'; exit 13; fi;
+		if [ -z $TYPE ]; then echo 'Wrong File Input !'; exit 2; fi;
 
 
-		# missing format ? || 65536
-		RANGE=$(grep -e '^255$' $FILE);
+		# data body
+		BODY=$(grep -v -e '^P[1-6]$' -e '^#.*$' -e '^[0-9]* [0-9]*$' -e '^255$' $FILE);
 
-		# unknown structure / order, not just line count etc.
-		COMMENTS=$(grep -e '^#.*$' $FILE);
+		# see 8bit limitation
+		RANGE=$(grep '^255$' $FILE);
+
+
+		COMMENTS=$(grep '^#.*$' $FILE);
+
 
 		# calculate size
-		SIZE=$(grep -e '^[0-9]* [0-9]*$' $FILE)
-		SIZE=(${SIZE// / }); # ' ' as  dilemeter after // , better than cut -d' ' -f1 piping
-		SIZE="${SIZE[0]}px x ${SIZE[1]}px (= $((${SIZE[0]}*${SIZE[1]})))";
+		LENGTH=$(echo $BODY | wc -w);
+		SIZE=$(grep '^[0-9]* [0-9]*$' $FILE)
 
-		echo 'TYPE:' $TYPE;
-		echo 'RANGE:' $RANGE;
-		# echo 'COMMENTS:' $COMMENTS;
-		echo 'SIZE:' $SIZE;
+
+		echo "TYPE: $TYPE";
+		echo "RANGE: $RANGE";
+		echo "COMMENTS: $COMMENTS";
+		echo "SIZE: $SIZE (= $LENGTH pixel)";
 
 		echo -en '\n';
 
-		# pure data - line doesnt matter
-		BODY=$(grep -v -e '^P[1-6]$' -e '^#.*$' -e '^[0-9]* [0-9]*$' -e '^255$' $FILE);
+
+		echo -e "value \t count";
+		echo -e "----- \t -----";
 
 
-		# creating an empty array
-		REF=();
-
-		# setting default values
-		while [ ${#REF[@]} -le 255 ]; do REF+=(0); done; #  less equals
-
-		COUNTER=0;	# increment - amount of entries
-		SUM=0;		# total sum
-		MEDIAN=();	# median list
-
-		# counting entries on top
-		for DATA in $BODY; 	do
-								REF[$DATA]=$((${REF[$DATA]}+1));
-								COUNTER=$(($COUNTER+1));
-								SUM=$(($SUM+$DATA));
-								MEDIAN+=($DATA);
-
-							done;
-
-		ARITH=$(($SUM/$COUNTER));
-
-		# this way or does the median also take 0 in account , then allways at the 127 ?
-		MEDIAN=${MEDIAN[$((${#MEDIAN[@]}/2))]};
+		SUM=0;		# sum to compare
+		ARITH=0;	#
+		MEDIAN=-1;	# default value
 
 
-		# show results - equalize lengths (index, value, percent)
-
-		echo -e "value \t count \t    percentage";
-		echo -e "----- \t ----- \t    ----------";
-
+		# counting the amount of specific numbers
 		for (( i=0; i<=255 ; i++ ));
+
 			do
+
 				if [ $i -lt 10 ];		then TEMP1="  ";
 				elif [ $i -lt 100 ];	then TEMP1=" ";
 										else TEMP1="";
 				fi
 
-				if [ ${REF[$i]} -lt 10 ];		then TEMP2="   ";
-				elif [ ${REF[$i]} -lt 100 ];	then TEMP2="  ";
-				elif [ ${REF[$i]} -lt 1000 ];	then TEMP2=" ";
-												else TEMP2="";
+				COUNTER=$(echo $BODY | tr ' ' '\n' | grep "^$i$" | wc -w); # grep scrapes the lines
+
+				if [ $COUNTER -lt 10 ];		then TEMP2="   ";
+				elif [ $COUNTER -lt 100 ];	then TEMP2="  ";
+				elif [ $COUNTER -lt 1000 ];	then TEMP2=" ";
+											else TEMP2="";
 				fi
 
-				#  current percentage
-				P=$(( ${REF[$i]} * 100 / $COUNTER ));
+				echo -e "$TEMP1$i: \t $TEMP2$COUNTER";
 
-				if [ $P -lt 10 ];		then TEMP3="  ";
-				elif [ $P -lt 100 ];	then TEMP3=" ";
-										else TEMP3="";
+
+				SUM=$(($SUM+$COUNTER));
+
+				ARITH=$(($ARITH+$i*$COUNTER));
+
+				if [ $MEDIAN -eq "-1" ] && [ $SUM -gt $(($LENGTH/2)) ]
+
+					then
+
+						MEDIAN=$i;
 				fi
 
-				echo -e "$TEMP1$i: \t $TEMP2${REF[$i]} \t ||  $TEMP3$P%";
 		done;
 
-		echo -en "\n""Mittelwert:" $ARITH "\n";
-		echo "Median:" $MEDIAN;
+
+
+		ARITH=$(($ARITH/$LENGTH));
+
+		echo -en "\n";
+
+		echo "Arithemic mean: " $ARITH;
+		echo "Median: " $MEDIAN;
 
 		exit 0;
 
 	else
 
-		echo 'Invalid input';
-		exit 127;
+		echo "Invalid Input !";
+		exit 1;
 fi
 
