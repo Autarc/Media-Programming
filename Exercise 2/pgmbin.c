@@ -1,19 +1,5 @@
 /*
-	A c command line tool which reads PGM-images (binary or ascii).
-
-	Use -help to learn more about the options.
-
-	: comments
-	: width
-	: height
-	: filename or -help
-
-	: statistic values =>	arithemic mean, the median, the probability of the colors, modal value,
-							maximum, minimum
-
-	@params
-
-	argv[2] => filename or -help
+	A command line tool which shows information about acii/binary pgm-images.
 */
 
 #include <stdio.h>
@@ -22,35 +8,21 @@
 
 
 
-
-/* Validation check */
+/* Validation */
 
 int valid ( char c ) {
 
-	if ( c != ' ' &&  c != '\n' && c != EOF ) return 1;
+	if ( c != ' ' &&  c != '\n' && c!= '\t' && c!= '\r' && c != EOF ) return 1;
 
 	return 0;
 }
 
 
-/* getting a new index, skipping ends */
-
-char newIndex ( FILE* fi ) {
-
-	char i = fgetc( fi );
-
-	while( !valid(i) ) i = fgetc( fi );
-
-	return i;
-}
-
-
-
 /* Retrieving a string */
 
-void nextString ( FILE* fi, char * buffer, int bufferSize ) {
+void nextString ( FILE* fi, char * buffer, int bufferSize, char start ) {
 
-	char c = newIndex(fi);
+	char c = start ? start : fgetc(fi);
 
 	int pos = 0;
 
@@ -58,7 +30,6 @@ void nextString ( FILE* fi, char * buffer, int bufferSize ) {
 
 		buffer[pos++] = c;
 		c = fgetc( fi );
-
 		if ( pos+1 == bufferSize ) break;
 	}
 
@@ -67,38 +38,40 @@ void nextString ( FILE* fi, char * buffer, int bufferSize ) {
 
 
 
+/* Receive the type */
 
 void getType( FILE* fi, char * buffer, int bufferSize ) {
 
 	char * type;
 
-	nextString( fi, buffer, bufferSize );
+	nextString( fi, buffer, bufferSize, 0 );
 
-	if ( strcmp( buffer, "P2") > -1 ) {
+	if ( strcmp( buffer, "P2") == 0 ) {
 
 		type = "ASCII";
 
-	} else if ( strcmp( buffer, "P5" ) > -1 ) {
+	} else if ( strcmp( buffer, "P5" ) == 0 ) {
 
 		type = "BINARY";
 
 	} else {
 
-		fprintf(stderr, "\n%s\n", "Invalid file format - no ascii nor binary pgm got used." );
-
-		exit(3);
+		fprintf(stderr, "\n%s\n", "\nERROR:\t(4) Invalid file format\n\nUSAGE:\tYou need to specify the filename of a valid acsii/binary pgm-image as the argument.\n\n\tFor more information use --help !" );
+		exit(4);
 	}
 
-	fprintf(stdout, "Type: \t\t%s\n", type );
-	printf("_____________________\n\n");
+	fprintf(stdout, "\tType: \t\t%s\n", type );
+	printf("\t___________________________\n\n");
 }
 
 
 
-void getComments( FILE* fi, char * buffer, int bufferSize ) {
+/* Show the comments */
 
-	// char * comments = "\0";
-	// comments[0] = '\0';
+void getComments( FILE* fi, char * buffer, int bufferSize, char * last ) {
+
+	char comments[1024];
+	comments[0] = '\0';
 
 	char c = fgetc(fi);
 
@@ -114,179 +87,241 @@ void getComments( FILE* fi, char * buffer, int bufferSize ) {
 			c = fgetc(fi);
 		}
 
-		// buffer[pos++] = '\n';
-		buffer[pos++] = '\t';
+		buffer[pos++] = '\n';
 		buffer[pos++] = '\t';
 		buffer[pos++] = '\0';
 
-		// https://en.wikibooks.org/wiki/C_Programming/Strings#The_strncat_function
-		// strcat( comments, buffer );
-
-		fprintf(stdout, "%s\n", buffer );
+		strcat( comments, buffer );
 
 		c = fgetc(fi);
 	}
 
-	// fprintf(stdout, "\nComments: \t%s\n", comments );
-	printf("\n");
-	printf("_____________________\n\n");
+	*last = c;
+
+	fprintf(stdout, "\tComments:\n\n\t%s", comments );
+	printf("___________________________\n\n");
 }
 
 
+/* Show the width */
 
+void getWidth( FILE* fi, char * buffer, int bufferSize, char last ) {
 
-/// ???? die eins wird noch verschluckt vom width...
-void getWidth( FILE* fi, char * buffer, int bufferSize ) {
+	nextString( fi, buffer, bufferSize, last );
 
-	nextString( fi, buffer, bufferSize );
-
-	char * width = buffer;
-
-	fprintf(stdout, "Width: \t\t%s\n", width );
+	fprintf(stdout, "\tWidth: \t\t%s\n", buffer );
 }
+
+
+/* Show the height */
 
 void getHeight( FILE* fi, char * buffer, int bufferSize ) {
 
-	nextString( fi, buffer, bufferSize );
+	nextString( fi, buffer, bufferSize, 0 );
 
-	char * height = buffer;
-
-	fprintf(stdout, "Height: \t%s\n", height );
+	fprintf(stdout, "\tHeight: \t%s\n", buffer );
 }
 
+
+/* Show the range */
 
 void getRange( FILE* fi, char * buffer, int bufferSize ) {
 
-	nextString( fi, buffer, bufferSize );
+	nextString( fi, buffer, bufferSize, 0 );
 
-	char * range = buffer;
+	fprintf(stdout, "\tRange: \t\t%s\n", buffer );
 
-	fprintf(stdout, "Range: \t\t%s\n", range );
-	printf("_____________________\n");
+	printf("\t___________________________\n");
 }
 
 
-void getStats( FILE* fi, char * buffer, int bufferSize ) {
+/* Show the stats */
 
-	// int range = atoi(buffer);
+void getStats( FILE* fi, char * type, int range ) {
 
-	// int min = range;
-	// int max = 0;
-	// int val; // current value
+	int min = range;
+	int max = 0;
+	int val;
 
-	// int histogram[range+1];
 
-	// int i; // incrementor
-
-	// for ( i = 0; i < range; i++ ) histogram[i] = 0;
-
+	int histogram[range+1];
 	int counter = 0;
+	int i;
 
-	char c = fgetc(fi);
+	for ( i = 0; i <= range; i++ ) histogram[i] = 0;
 
-	printf("\n");
+
+	char buffer[1024];
+
+	int c = fgetc(fi);
 
 	while ( c != EOF ) {
 
-		nextString( fi, buffer, bufferSize );
+		if ( strcmp( type, "P2") == 0 ) {
 
-		// val = atoi(buffer);
+			nextString( fi, buffer, sizeof(buffer), c );
 
-		counter++;
+			val = atoi(buffer);
 
-		fprintf(stdout, "%i: \t\t%s\n", counter, buffer );
+		} else {
 
-		// histogram[val]++;
-		// if ( val < min ) min = val;
-		// if ( val > max ) max = val;
+			val = c;
+		}
+
+		if ( val != '\0' ) {
+
+			histogram[val]++;
+			if ( val < min ) min = val;
+			if ( val > max ) max = val;
+
+			counter++;
+		}
 
 		c = fgetc(fi);
 	}
 
-	// int sum = 0;
-	// int arith = 0;
-	// int median = -1;
 
-	// // modal ?
-	// int modal = 0;
+	double arith = 0;
+	int median = -1;
+	int sum = 0;
 
-	// int current;
+	int ref[256];
+	int amount = 0;
+	int modal = -1;
 
-	// for ( i = 0; i < range; i++ ) {
+	int current;
 
-	// 	current = histogram[i];
+	char format = ' ';
 
-	// 	sum += current;
-	// 	arith += i * current;
 
-	// 	if ( median == -1 && sum >= counter/2 ) median = i;
-	// }
+	fprintf(stdout, "\n\tValues:\n\n");
 
-	// fprintf(stdout, "Median: \t%i\n", median );
-	// fprintf(stdout, "Arith.: \t%i\n", arith );
-	// fprintf(stdout, "Max.: \t\t%i\n", max );
-	// fprintf(stdout, "Min.: \t\t%i\n", min );
+	for ( i = 0; i <= range; i++ ) {
 
-	// fprintf(stdout, "Modal: \t\t%i\n", modal );
+		current = histogram[i];
 
-	// Häufigkeit aller Grauwerte, arith. Mittel,
-	// Median, Modalwert, Maximum, Minimum
+		sum += current;
+		arith += (i * current);
 
-	printf("_____________________\n\n");
+		if ( current >= modal  ) {
+
+			if ( current > modal ) amount = 0;
+
+			modal = current;
+			ref[amount++] = i;
+		}
+
+		if ( median == -1 && sum >= counter/2 ) median = i;
+
+		if ( i < 10  ) { 		fprintf(stdout, "\t%c%c%i:	\t%i\n",	format, format, i, current ); }
+		else if ( i < 100 ) { 	fprintf(stdout, "\t%c%i:	\t%i\n",	format, 		i, current ); }
+		else { 					fprintf(stdout, "\t%i:		%i\n", 						i, current ); }
+
+	}
+
+	arith /= counter;
+
+
+	printf("\t___________________________\n\n");
+
+	fprintf(stdout, "\tMedian: \t%i\n", median );
+	fprintf(stdout, "\tArith.: \t%f\n", arith );
+
+
+	if ( amount == 1 ) {
+
+		fprintf(stdout, "\tModal: \t\t%i\n", ref[0] );
+
+	} else {
+
+		fprintf(stdout, "\n\tModal:\n");
+
+		for ( i = 0; i < amount; i++ ) {
+
+			fprintf(stdout, "\t\t\t%i\n", ref[i] );
+		}
+
+		fprintf(stdout,"\n");
+	}
+
+	fprintf(stdout, "\tMax.: \t\t%i\n", max );
+	fprintf(stdout, "\tMin.: \t\t%i\n", min );
+
+	printf("\t___________________________\n\n");
 }
-
-
 
 
 
 
 int main ( int argc, char * argv[] ) {
 
-	if ( argc != 2 ) {
 
-		fprintf(stderr, "\n%s\n", "Missing arguments." );
+	if ( argc < 2 ) {
+
+		fprintf(stderr, "\n%s\n", "\nERROR:\t(1) Missing argument\n\nUSAGE:\tYou need to provide the filename of a valid asci/binary pgm-image as an argument.\n\n\tFor more information use --help !" );
 
 		exit(1);
 	}
 
-	if ( strcmp( argv[1], "-help" ) == 0 ) {
+	if ( argc > 2 ) {
 
-		fprintf(stderr, "\n%s\n", "This programm can read an arbitary pgm ascii or binary image and show statistics.");
+		fprintf(stderr, "\n%s\n", "\nERROR:\t(2) Too many arguments\n\nUSAGE:\tYou can just use one argument (the filename of a valid asci/binary pgm-image).\n\n\tFor more information use --help !" );
+
+		exit(2);
+	}
+
+
+	if ( strcmp( argv[1], "--help" ) == 0 || strcmp( argv[1], "-h" ) == 0 ) {
+
+		fprintf(stderr, "\n%s\n", "\n\tThis programm can read an arbitary ascii or binary pgm-image and show it's statistics.\n\tIt takes the filename as the first argument and lists the results.");
 
 		exit(0);
 	}
 
 
-
 	char * name = argv[1];
 
-	// input
 	FILE * fi = fopen( name , "r");
 
 	if ( !fi ) {
 
-		fprintf(stderr, "\n%s\n", "Can't read the file." );
+		fprintf(stderr, "\n%s\n", "\nERROR:\t(3) The file couldn't be read\n\nUSAGE:\tEither the choosen file doesn't exist or you don't habe the required permission for reading the file.\n\n\tIf you are not allowed to change something on the system by yourself - ask a trustworthy systemadmin for help !" );
 
-		exit(2);
+		exit(3);
 	}
 
-	// general memory temp buffer
-	char buffer[1024];
 
 
-	printf("\n");
+	fprintf(stdout,"\n\n");
 
-	fprintf(stdout, "Filename: \t%s\n\n", name );
+	fprintf(stdout, "\tFilename: \t%s\n\n", name );
 
-	getType( fi, buffer, sizeof(buffer) );
-	getComments( fi, buffer, sizeof(buffer) );
-	getWidth( fi, buffer, sizeof(buffer) );
-	getHeight( fi, buffer, sizeof(buffer) );
-	getRange( fi, buffer, sizeof(buffer) );
 
-	getStats( fi, buffer, sizeof(buffer) );
+	char type[10];
+	getType( fi, type, sizeof(type) );
+
+	char comments[2024];
+	char last;
+
+	getComments( fi, comments, sizeof(comments), &last );
+
+	char width[100];
+	getWidth( fi, width, sizeof(width), last );
+
+	char height[100];
+	getHeight( fi, height, sizeof(height) );
+
+	char range[100];
+	getRange( fi, range, sizeof(range) );
+
+
+	getStats( fi, type, atoi(range) );
+
 
 	fclose( fi );
+
+
+	fprintf(stderr, "\t%s\n\n", "::\t SUCCESS\t ::" );
 
 	return 0;
 }
