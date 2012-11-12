@@ -285,7 +285,7 @@ int main ( int argc, char * argv[] ) {
 
 	if ( !fi ) {
 
-		fprintf(stderr, "\n%s\n", "\nERROR:\t(3) The file couldn't be read\n\nUSAGE:\tEither the choosen file doesn't exist or you don't habe the required permission for reading the file.\n\n\tIf you are not allowed to change something on the system by yourself - ask a trustworthy systemadmin for help !" );
+		fprintf(stderr, "\n%s\n", "\nERROR:\t(3) The file couldn't be read\n\nUSAGE:\tEither the choosen file doesn't exist or you don't have the required permission for reading the file.\n\n\tIf you are not allowed to change something on the system by yourself - ask a trustworthy systemadmin for help !" );
 
 		exit(3);
 	}
