@@ -284,9 +284,59 @@ unsigned short LoadPGM( FILE * fi, Image * img ) {
 
 
 
+	// char	magic[2];
+	// char**	comments;
 
 
 
+// copy meta information and set defaults
+
+void setStats( Image * in, Image * out ) {
+
+	// strcpy( in->magic, out->magic );
+	// out->magic[0] = in->magic[0];
+	// out->magic[1] = in->magic[1];
+
+	// char magic[3]; // 3 => P2 \0 , as it was just 2 -> P \0
+
+	// magic[0] = "P";
+	// magic[1] = "2";
+	// magic[2] = "\0";
+
+	out->magic[0] = 80;//magic[0];//80;
+	out->magic[1] = 50;//magic[1];//50;
+
+	//out->comments = in->comments;
+
+	int width = in->width,
+		height = in->height;
+
+	out->width = width;
+	out->height = height;
+
+	out->depth = in->depth;
+
+
+	out->data = (byte**) malloc( height * sizeof(byte*) );
+
+	int i;
+
+	for ( i = 0; i < height; i++ ) {
+
+		out->data[i] = (byte*) malloc( width * sizeof(byte) );
+	}
+
+
+	int x, y;
+
+	for ( y = 0; y < height; y++ ) {
+		for ( x = 0; x < width; x++ ) {
+
+			out->data[y][x] = in->data[y][x];
+		}
+	}
+
+}
 
 
 
@@ -296,12 +346,38 @@ unsigned short LoadPGM( FILE * fi, Image * img ) {
 
 unsigned short SavePGM( FILE * fo, Image * out ) {
 
+	// magic
+	fprintf( fo, "%s\n", out->magic );
+
+	// comments
+	// fprintf( fo, "%s\n", out.magic );
+
+
+	// width & height
+	fprintf( fo, "%i %i\n", out->width, out->height );
+
+	fprintf( fo, "%i\n", out->depth );
+
+
+	int width = out->width,
+		height = out->height,
+
+		x, y;
+
+	for ( y = 0; y < height; y++ ) {
+		for ( x = 0; x < width; x++ ) {
+
+			fprintf( fo, "%i ", out->data[y][x] );
+		}
+	}
 
 	// fail
-	return 0;
+	// return 0;
+
+
 
 	// success
-	// return > 0;
+	return 1;
 };
 
 
@@ -363,6 +439,9 @@ unsigned short InvertPGM( Image * in, Image * out ) {
 
 
 
+
+
+
 // clean memory usage for image. free the image data
 void freeImage( Image * img ) {
 
@@ -376,4 +455,13 @@ void freeImage( Image * img ) {
 
 	free( img->data );
 }
+
+
+
+
+
+
+
+
+
 

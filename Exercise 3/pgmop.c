@@ -30,10 +30,9 @@ int main ( int argc, char * argv[] ) {
 	}
 
 
+	char* inName = argv[1];
 
-	char* name = argv[1];
-
-	FILE * fi = fopen( name , "r");
+	FILE * fi = fopen( inName , "r" );
 
 	if ( !fi ) {
 
@@ -43,7 +42,7 @@ int main ( int argc, char * argv[] ) {
 
 	Image in; // doesnt require manuel free( imgIn ), automatic
 
-	in.name = name;
+	in.name = inName;
 
 	short loaded = LoadPGM( fi, &in );
 
@@ -53,83 +52,77 @@ int main ( int argc, char * argv[] ) {
 	}
 
 
-	Image out;
-
-	// if ( argc === 3 ) { // -o
-
-	// 	if ( strcmp( argv[2], "-o" ) == 0  || strcmp( argv[2], "--output" ) == 0 ) {
-
-	// 		// expect ouputfile
-	// 	// 	// if ( !argv[3] ) {
-
-	// 	// 		errorMessage( 5, "Missing outputfilename" );
-	// 	// 	// }
-	// 		fprintf(stdout, "%s\n", "needs output");
-	// 	// 	// char* outName = argv[3];
-	// 	}
-
 	// // Aufruf: (wahlweise)
 	// // pgmop.elf <infile> [-o <outfile>] [ -norm | -invert ]
 	// // Beispiele für Aufruf in der Shell mit/ohne Pipe:
-	// // pgmop.elf logo.bin.pgm -o normalized.bin.pgm -norm
-	// // pgmop.elf logo.bin.pgm -invert | display
+	// // pgmop.elf logo.bin.pgm -o normalized.bin.pgm -norm 	// 5
+	// // pgmop.elf logo.bin.pgm -invert | display				// 3
 
-	// }
+	// work, logic
+	if ( argc >= 3 ) {
 
-
-
-
-
-	// // receives the informations..
-	// fprintf(stdout, "Name:\t%s\n", imgIn.name );
-	// fprintf(stdout, "Magic:\t%s\n", imgIn.magic );
-	// // comments
-	// fprintf(stdout, "Width:\t%i\n", imgIn.width );
-	// fprintf(stdout, "Height:\t%i\n", imgIn.height );
-	// fprintf(stdout, "Depth:\t%i\n", imgIn.depth );
-	// // data
+		Image out;
+		FILE* fo = stdout;
 
 
+		// copy basics
+		setStats( &in, &out );
 
 
+		// currently : all second argument
+
+		if ( strcmp( argv[2], "-o" ) == 0  || strcmp( argv[2], "--output" ) == 0 ) { // 3
+
+			if ( !argv[3] ) { // expect ouputfile
+
+				errorMessage( 5, "Missing output filename" );
+			}
+
+			char* outName = argv[3];
+
+			fo = fopen( outName, "w" );
+
+			if ( !fo ) {
+
+				errorMessage( 6, "The file couldn't be created" );
+			}
+
+			out.name = outName;
+		}
 
 
-	// if ( argc > 2 ) {
+		if ( strcmp( argv[2], "-norm" ) == 0 || strcmp( argv[2], "-n" ) == 0 || // 3 || 5
+			 ( argv[4] && strcmp( argv[4], "-norm" ) == 0 ) ||
+			 ( argv[4] && strcmp( argv[4], "-n" ) == 0 ) ) {
 
-	// 	fprintf(stderr, "\n%s\n", "\nERROR:\t(2) Too many arguments\n\nUSAGE:\tYou can just use one argument (the filename of a valid asci/binary pgm-image).\n\n\tFor more information use --help !" );
+			byte normalized = NormPGM( &in, &out );
 
-	// 	exit(2);
-	// }
+			if ( !normalized ) {
 
-
-	// if ( strcmp( argv[1], "--help" ) == 0 || strcmp( argv[1], "-h" ) == 0 ) {
-
-	// 	fprintf(stderr, "\n%s\n", "\n\tThis programm can read an arbitary ascii or binary pgm-image and show it's statistics.\n\tIt takes the filename as the first argument and lists the results.");
-
-	// 	exit(0);
-	// }
+				errorMessage( 7, "The image couldn't be normalized" );
+			}
+		}
 
 
-	// char * name = argv[1];
+		if ( strcmp( argv[2], "-invert" ) == 0 || strcmp( argv[2], "-i" ) == 0 || // 3 || 5
+			 ( argv[4] && strcmp( argv[4], "-invert" ) == 0 ) ||
+			 ( argv[4] && strcmp( argv[4], "-i" ) == 0 ) ) {
 
-	// FILE * fi = fopen( name , "r");
+			byte inverted = InvertPGM( &in, &out );
 
-	// if ( !fi ) {
+			if ( !inverted ) {
 
-	// 	fprintf(stderr, "\n%s\n", "\nERROR:\t(3) The file couldn't be read\n\nUSAGE:\tEither the choosen file doesn't exist or you don't have the required permission for reading the file.\n\n\tIf you are not allowed to change something on the system by yourself - ask a trustworthy systemadmin for help !" );
-
-	// 	exit(3);
-	// }
-
-
-
-	// fprintf(stdout,"\n\n");
-
-	// fprintf(stdout, "\tFilename: \t%s\n\n", name );
+				errorMessage( 8, "The image couldn't be inverted" );
+			}
+		}
 
 
+		SavePGM( fo, &out ); // showing - creating output from the data
 
+		freeImage( &out );
 
+		fclose( fo );
+	}
 
 
 
@@ -138,43 +131,7 @@ int main ( int argc, char * argv[] ) {
 
 	fclose( fi );
 
-
-
 	fprintf( stdout, "\t%s\n\n", "::\t SUCCESS\t ::" );
 
 	return 0;
 }
-
-// main() {
-
-//     Image* img; // 4 byte
-//     img = (Image*) malloc( sizeof(Image) ); // 12 byte, heap: wird erst bei free() gelöscht (oder bei programm-ende)
-//                             // void*
-//     LoadPGM(img);
-
-
-//     Image imgV; // 12 byte, stack: wird gelöschte wenn block {} verlassen wird
-
-//     imgV = LoadPGMValue(imgV);
-//     LoadPGM(&imgV);
-
-//     // normalisieren:
-
-//     byte color = img->data[y][x]; // wertebereich: min bis max
-//     byte min, max;
-//     //1) auf null schieben
-//     color = (color - min) // wertebereich: 0 bis max-min
-//     //2) skalieren auf 0 bis 1 - achtung integer-devision ->  reihenfolge: 1) 3) 2)
-//     color = color / (max - min) // wertebereich: 0 bis 1
-//     //3) skalieren auf 255
-//     color = color * 255 // wertebereich: 0 bis 255 :)
-
-//     // zusammen:
-//     color = (color - min) * 255 / (max - min);
-
-
-
-//     FreeImage(img);
-
-//     free(img);
-// }

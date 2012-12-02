@@ -28,6 +28,9 @@ unsigned short InvertPGM( Image * in, Image * out );
 
 /* own function declarations for reading etc. */
 
+
+void setStats( Image * in, Image * out );
+
 void errorMessage( short exitNumber, char* message );
 
 void nextString( FILE* fi, char * buffer, int bufferSize, char start );
