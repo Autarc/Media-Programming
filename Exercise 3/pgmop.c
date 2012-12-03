@@ -1,19 +1,11 @@
-/*
-	....
-*/
-
+/**/
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <string.h>
 
 // #include <mypgmstd.h>
 #include <mypgm.h>
 
-
-// pgmop.elf <infile> [-o <outfile>] [ -norm | -invert ]
-
-// need to regard  the dependency - of -o, then output file required !
 
 
 int main ( int argc, char * argv[] ) {
@@ -40,7 +32,7 @@ int main ( int argc, char * argv[] ) {
 	}
 
 
-	Image in; // doesnt require manuel free( imgIn ), automatic
+	Image in;
 
 	in.name = inName;
 
@@ -52,11 +44,8 @@ int main ( int argc, char * argv[] ) {
 	}
 
 
-	// // Aufruf: (wahlweise)
-	// // pgmop.elf <infile> [-o <outfile>] [ -norm | -invert ]
-	// // Beispiele für Aufruf in der Shell mit/ohne Pipe:
-	// // pgmop.elf logo.bin.pgm -o normalized.bin.pgm -norm 	// 5
-	// // pgmop.elf logo.bin.pgm -invert | display				// 3
+	// pgmop.elf logo.bin.pgm -o normalized.bin.pgm -norm 	// 5
+	// pgmop.elf logo.bin.pgm -invert | display				// 3
 
 	// work, logic
 	if ( argc >= 3 ) {
@@ -64,12 +53,8 @@ int main ( int argc, char * argv[] ) {
 		Image out;
 		FILE* fo = stdout;
 
-
 		// copy basics
 		setStats( &in, &out );
-
-
-		// currently : all second argument
 
 		if ( strcmp( argv[2], "-o" ) == 0  || strcmp( argv[2], "--output" ) == 0 ) { // 3
 
@@ -117,7 +102,7 @@ int main ( int argc, char * argv[] ) {
 		}
 
 
-		SavePGM( fo, &out ); // showing - creating output from the data
+		SavePGM( fo, &out );
 
 		freeImage( &out );
 
@@ -126,7 +111,8 @@ int main ( int argc, char * argv[] ) {
 
 
 
-	// clean up memory / connections
+	// clean up memory/io
+
 	freeImage( &in );
 
 	fclose( fi );

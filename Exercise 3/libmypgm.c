@@ -17,8 +17,6 @@ void errorMessage ( short exitNumber, char* message ) {
 
 
 
-
-
 /* Validation */
 
 int valid ( char c ) {
@@ -61,15 +59,7 @@ void getMagic( FILE* fi, char * buffer, int bufferSize ) {
 
 	nextString( fi, buffer, bufferSize, 0 );
 
-	if ( strcmp( buffer, "P2") == 0 ) {
-
-		// type = "ASCII";
-
-	} else if ( strcmp( buffer, "P5" ) == 0 ) {
-
-		// type = "BINARY";
-
-	} else {
+	if ( strcmp( buffer, "P2") != 0 && strcmp( buffer, "P5" ) != 0 ) {
 
 		errorMessage( 6, "Invalid file format" );
 	}
@@ -80,7 +70,6 @@ void getMagic( FILE* fi, char * buffer, int bufferSize ) {
 /* Show the comments */
 
 void getComments( FILE* fi, char * buffer, int bufferSize, char * last ) {
-
 
 	char comments[1024];
 	comments[0] = '\0';
@@ -113,7 +102,6 @@ void getComments( FILE* fi, char * buffer, int bufferSize, char * last ) {
 
 
 /* Show the width */
-
 void getWidth( FILE* fi, char * buffer, int bufferSize, char last ) {
 
 	nextString( fi, buffer, bufferSize, last );
@@ -121,7 +109,6 @@ void getWidth( FILE* fi, char * buffer, int bufferSize, char last ) {
 
 
 /* Show the height */
-
 void getHeight( FILE* fi, char * buffer, int bufferSize ) {
 
 	nextString( fi, buffer, bufferSize, 0 );
@@ -129,42 +116,34 @@ void getHeight( FILE* fi, char * buffer, int bufferSize ) {
 
 
 /* Show the range */
-
 void getDepth( FILE* fi, char * buffer, int bufferSize ) {
 
 	nextString( fi, buffer, bufferSize, 0 );
 }
 
 
-
+/* Get the data */
 void getData( FILE* fi, char * magic,  Image * img ) {
 
 	int width 	= img->width,
-		height	= img->height;
+		height	= img->height,
 
-	// dclaring space
+		i; // not requiring std=c99
 
 	img->data = (byte**) malloc( height * sizeof(byte*) );
-
-	int i; // not requiring std=c99
 
 	for ( i = 0; i < height; i++ ) {
 
 		img->data[i] = (byte*) malloc( width * sizeof(byte) );
 	}
 
-
-
-
 	int min		= img->depth,
-		max		= 0;
+		max		= 0,
 
-
-	// data instead of hist, using a values array
-	// reading all the values in here.., simple array access
-	int values[ width * height ],
+		values[ width * height ],
 		counter = 0,
 		val;
+
 
  	char buffer[1024];
 
@@ -201,12 +180,7 @@ void getData( FILE* fi, char * magic,  Image * img ) {
 	img->max = max;
 
 
-
-	int y; // not requiring std=c99
-	int x; // not requiring std=c99
-
-	int pos;
-
+	int y, x, pos; // not requiring std=c99
 
 	// could check for wrong information, manipulated header
 	for ( y = 0; y < height; y++ ) {
@@ -223,13 +197,9 @@ void getData( FILE* fi, char * magic,  Image * img ) {
 
 
 
-
-
-
-// Implementation of the in 'mypgm.h' declared functions
+/* mylibpgm - functions */
 
 unsigned short LoadPGM( FILE * fi, Image * img ) {
-
 
 	char magic[3]; // 3 => P2 \0 , as it was just 2 -> P \0
 
@@ -253,73 +223,41 @@ unsigned short LoadPGM( FILE * fi, Image * img ) {
 	if ( !atoi(width) ) return 0;
 	img->width = atoi(width);
 
-
-
 	char height[100];
 	getHeight( fi, height, sizeof(height) );
 	if ( !atoi(height) ) return 0;
 	img->height = atoi(height);
-
-
 
 	char depth[100];
 	getDepth( fi, depth, sizeof(depth) );
 	if ( !atoi(depth) ) return 0;
 	img->depth = atoi(depth);
 
-
-	// read data
 	getData( fi, magic, img );
-
 
 	return 1; // success
 };
 
 
 
-
-
-
-
-
-
-
-	// char	magic[2];
-	// char**	comments;
-
-
-
 // copy meta information and set defaults
-
 void setStats( Image * in, Image * out ) {
 
-	// strcpy( in->magic, out->magic );
-	// out->magic[0] = in->magic[0];
-	// out->magic[1] = in->magic[1];
-
-	// char magic[3]; // 3 => P2 \0 , as it was just 2 -> P \0
-
-	// magic[0] = "P";
-	// magic[1] = "2";
-	// magic[2] = "\0";
-
-	out->magic[0] = 80;//magic[0];//80;
-	out->magic[1] = 50;//magic[1];//50;
+	out->magic[0] = 'P';
+	out->magic[1] = '2';
 
 	//out->comments = in->comments;
 
 	int width = in->width,
-		height = in->height;
+		height = in->height,
+		i;
 
 	out->width = width;
 	out->height = height;
 
 	out->depth = in->depth;
 
-
 	out->data = (byte**) malloc( height * sizeof(byte*) );
-
-	int i;
 
 	for ( i = 0; i < height; i++ ) {
 
@@ -340,14 +278,10 @@ void setStats( Image * in, Image * out ) {
 
 
 
-
-
-
-
 unsigned short SavePGM( FILE * fo, Image * out ) {
 
 	// magic
-	fprintf( fo, "%s\n", out->magic );
+	fprintf(fo, "%c%c\n", out->magic[0], out->magic[1]);
 
 	// comments
 	// fprintf( fo, "%s\n", out.magic );
@@ -356,6 +290,7 @@ unsigned short SavePGM( FILE * fo, Image * out ) {
 	// width & height
 	fprintf( fo, "%i %i\n", out->width, out->height );
 
+	// depth
 	fprintf( fo, "%i\n", out->depth );
 
 
@@ -375,7 +310,6 @@ unsigned short SavePGM( FILE * fo, Image * out ) {
 	// return 0;
 
 
-
 	// success
 	return 1;
 };
@@ -391,7 +325,7 @@ unsigned short NormPGM( Image * in, Image * out ) {
     	range	= max - min;
 
     int x, y;
-    byte color; // using byte to normalise, more efficienty unsigned short.
+    byte color;
 
     for ( y = 0; y < height; y++ ) {
     	for ( x = 0; x < width; x++ ) {
@@ -404,7 +338,7 @@ unsigned short NormPGM( Image * in, Image * out ) {
 
     // return 0; // fail
 
-	// succerss
+	// success
 	return 1;
 };
 
@@ -412,12 +346,10 @@ unsigned short NormPGM( Image * in, Image * out ) {
 
 unsigned short InvertPGM( Image * in, Image * out ) {
 
-    int height	= in->height;
-    int width	= in->width;
+    int height	= in->height,
+    	width	= in->width,
 
-    int x;
-    int y;
-    int color;
+    	x, y, color;
 
     for ( y = 0; y < height; y++ ) {
     	for ( x = 0; x < width; x++ ) {
@@ -434,19 +366,11 @@ unsigned short InvertPGM( Image * in, Image * out ) {
 };
 
 
-
-
-
-
-
-
-
-
 // clean memory usage for image. free the image data
 void freeImage( Image * img ) {
 
-	int height = img->height;
-	int i;
+	int height = img->height,
+		i;
 
 	for ( i = 0; i < height; i++ ) {
 
@@ -455,13 +379,3 @@ void freeImage( Image * img ) {
 
 	free( img->data );
 }
-
-
-
-
-
-
-
-
-
-

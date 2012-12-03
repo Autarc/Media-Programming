@@ -26,13 +26,8 @@ unsigned short SavePGM( FILE * fo, Image * out );
 unsigned short NormPGM( Image * in, Image * out );
 unsigned short InvertPGM( Image * in, Image * out );
 
-/* own function declarations for reading etc. */
-
-
-void setStats( Image * in, Image * out );
+/* own declarations */
 
 void errorMessage( short exitNumber, char* message );
-
-void nextString( FILE* fi, char * buffer, int bufferSize, char start );
-
+void setStats( Image * in, Image * out );
 void freeImage( Image * img );
