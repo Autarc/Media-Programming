@@ -54,7 +54,7 @@ void getMagic( FILE* fi, char * buffer, int bufferSize ) {
 
 	if ( strcmp( buffer, "P2") != 0 && strcmp( buffer, "P5" ) != 0 ) {
 
-		errorMessage( 9, "Invalid file format" );
+		errorMessage( 10, "Invalid file format" );
 	}
 }
 

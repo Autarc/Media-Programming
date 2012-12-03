@@ -47,6 +47,8 @@ int main ( int argc, char * argv[] ) {
 
 	if ( argc >= 3 ) {
 
+		int valid = 0;
+
 		Image out;
 		FILE* fo = stdout;
 
@@ -54,6 +56,8 @@ int main ( int argc, char * argv[] ) {
 		setStats( &in, &out );
 
 		if ( strcmp( argv[2], "-o" ) == 0  || strcmp( argv[2], "--output" ) == 0 ) { // 3
+
+			valid = 1;
 
 			if ( !argv[3] ) {
 
@@ -77,6 +81,8 @@ int main ( int argc, char * argv[] ) {
 			 ( argv[4] && strcmp( argv[4], "-norm" ) == 0 ) ||
 			 ( argv[4] && strcmp( argv[4], "-n" ) == 0 ) ) {
 
+			valid = 1;
+
 			byte normalized = NormPGM( &in, &out );
 
 			if ( !normalized ) {
@@ -90,12 +96,20 @@ int main ( int argc, char * argv[] ) {
 			 ( argv[4] && strcmp( argv[4], "-invert" ) == 0 ) ||
 			 ( argv[4] && strcmp( argv[4], "-i" ) == 0 ) ) {
 
+			valid = 1;
+
 			byte inverted = InvertPGM( &in, &out );
 
 			if ( !inverted ) {
 
 				errorMessage( 8, "The image couldn't be inverted" );
 			}
+		}
+
+
+		if ( !valid ) {
+
+			errorMessage( 9, "Invalid parameter" );
 		}
 
 
