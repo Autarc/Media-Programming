@@ -1,4 +1,3 @@
-
 typedef unsigned char byte;
 
 typedef struct image {
@@ -7,18 +6,16 @@ typedef struct image {
 	char	magic[2];
 	char**	comments;
 
-	// unsigned
-	short	width;
-	short	height;
-	short	depth;
+	unsigned short	width;
+	unsigned short	height;
+	unsigned short	depth;
 
 	byte**	data;
 
-	short	min;
-	short	max;
+	unsigned short	min;
+	unsigned short	max;
 
 } Image;
-
 
 
 unsigned short LoadPGM( FILE * fi, Image * in );

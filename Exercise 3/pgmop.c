@@ -1,11 +1,12 @@
-/**/
+/*
+	pgmop is a small utility tool, which reads PGM images (ascii or binary) and can normalize or
+	invert them. The result can be saved into a file or shown at the commandline.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-// #include <mypgmstd.h>
 #include <mypgm.h>
-
 
 
 int main ( int argc, char * argv[] ) {
@@ -44,10 +45,6 @@ int main ( int argc, char * argv[] ) {
 	}
 
 
-	// pgmop.elf logo.bin.pgm -o normalized.bin.pgm -norm 	// 5
-	// pgmop.elf logo.bin.pgm -invert | display				// 3
-
-	// work, logic
 	if ( argc >= 3 ) {
 
 		Image out;
@@ -58,7 +55,7 @@ int main ( int argc, char * argv[] ) {
 
 		if ( strcmp( argv[2], "-o" ) == 0  || strcmp( argv[2], "--output" ) == 0 ) { // 3
 
-			if ( !argv[3] ) { // expect ouputfile
+			if ( !argv[3] ) {
 
 				errorMessage( 5, "Missing output filename" );
 			}
@@ -111,13 +108,13 @@ int main ( int argc, char * argv[] ) {
 
 
 
-	// clean up memory/io
+	// clean up memory & io
 
 	freeImage( &in );
 
 	fclose( fi );
 
-	fprintf( stdout, "\t%s\n\n", "::\t SUCCESS\t ::" );
+	fprintf( stdout, "\n\t%s\n\n", "::\t SUCCESS\t ::" );
 
 	return 0;
 }
